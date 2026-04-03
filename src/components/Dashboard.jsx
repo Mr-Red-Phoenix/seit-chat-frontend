@@ -34,7 +34,8 @@ const Dashboard = () => {
     
     if (!currentUserId) return; 
 
-    const newSocket = io("http://10.242.152.48:5000"); 
+    // const newSocket = io("http://10.242.152.48:5000"); 
+    const newSocket = io("https://seit-chat-backend.onrender.com");
     setSocket(newSocket);
   
     // 1. Fire setup ONLY when officially connected (handles wake-ups and server restarts)

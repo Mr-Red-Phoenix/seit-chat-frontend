@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://10.242.152.48:5000/api', // Pointing straight to your Express server!
+  // baseURL: 'http://10.242.152.48:5000/api', // Pointing straight to your Express server!
+  baseURL: "https://seit-chat-backend.onrender.com/api",
   withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
