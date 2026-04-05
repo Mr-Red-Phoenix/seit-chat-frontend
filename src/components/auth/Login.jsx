@@ -10,20 +10,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: false, password: false });
   const [apiError, setApiError] = useState('');
-
+  const [rememberMe, setRememberMe] = useState(false);
   const { theme, toggleTheme } = useTheme();
   
   // 1. THIS IS THE REAL BACKEND CONNECTION
   const { login, loginWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
-
-  const handleFillDemo = () => {
-    // Updated to match your actual MongoDB credentials!
-    setEmail('mr.parthsharma20@gmail.com'); 
-    setPassword('user123');
-    setErrors({ email: false, password: false });
-    setApiError(''); 
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,17 +25,16 @@ const Login = () => {
       email: email.trim() === '',
       password: password.trim() === ''
     };
-    
     setErrors(newErrors);
 
     if (newErrors.email || newErrors.password) {
       return; 
     }
 
-    // 2. THE REAL LOGIN LOGIC
-    const success = await login(email, password);
+    // Pass rememberMe into your context function!
+    const success = await login(email, password, rememberMe);
     if (success) {
-      navigate('/dashboard'); // Teleport to dashboard on success!
+      navigate('/dashboard'); 
     } else {
       setApiError('Incorrect email or password. Please try again.');
     }
@@ -101,6 +92,7 @@ const Login = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+            
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <svg className={`h-5 w-5 ${errors.password ? 'text-red-400' : 'text-gray-400 dark:text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,29 +123,16 @@ const Login = () => {
             {errors.password && <p className="mt-1.5 text-sm text-red-500">Password is required</p>}
           </div>
 
-          {/* <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center">
-              <input id="remember-me" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer" />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Remember me</label>
-            </div>
-            <a href="#" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Forgot Password?</a>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <button type="button" onClick={handleFillDemo} className="w-full py-2.5 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              Fill Demo Credentials
-            </button>
-            <button type="submit" disabled={loading} className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 flex justify-center items-center">
-              {loading ? 'Checking...' : 'Sign In'}
-            </button>
-          </div>
-        </form> */}
-
-        {/* ... password input above ... */}
           
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center">
-              <input id="remember-me" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer" />
+              <input 
+                id="remember-me" 
+                type="checkbox" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer" 
+              />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Remember me</label>
             </div>
             {/* <a href="#" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Forgot Password?</a> */}
@@ -201,8 +180,13 @@ const Login = () => {
           <div className="mt-6 flex justify-center">
          <GoogleLogin
            onSuccess={async (credentialResponse) => {
-             const success = await loginWithGoogle(credentialResponse.credential);
-             if (success) navigate('/dashboard');
+             const result = await loginWithGoogle(credentialResponse.credential);
+            if (result?.isNewUser) {
+               // Teleport to Register and pass the Google data!
+               navigate('/register', { state: { googleData: result.googleData } });
+             } else if (result?.success) {
+               navigate('/dashboard');
+             }
            }}
            onError={() => {
              setApiError('Google Sign-In was unsuccessful.');

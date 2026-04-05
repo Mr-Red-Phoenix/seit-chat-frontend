@@ -46,25 +46,27 @@ export const AuthProvider = ({ children }) => {
     toast.success('Logged out successfully');
   };
 
-  // Add 'username' as the second parameter
-  const registerUser = async (name, username, email, password) => {
+// 1. Add "otp" to the function parameters
+  const registerUser = async (name, username, email, password, otp) => { 
     setLoading(true);
     try {
-      // Send the username to the backend
-      const response = await api.post('/auth/register', { name, username, email, password });
+      // 2. Add "otp" to the payload being sent to the backend
+      const response = await api.post('/auth/register', { 
+        name, 
+        username, 
+        email, 
+        password, 
+        otp 
+      });
       
-      const { user: userData, accessToken } = response.data.data;
-      
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      const { user, accessToken, refreshToken } = response.data.data;
       localStorage.setItem('accessToken', accessToken);
-      
-      toast.success(`Welcome to Seit Chat, ${userData.name}!`);
-      return true;
+      localStorage.setItem('refreshToken', refreshToken);
+      setUser(user);
+      return true; 
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed. Try again.';
-      toast.error(message);
-      return false;
+      console.error("Registration failed:", error);
+      return false; 
     } finally {
       setLoading(false);
     }
@@ -74,22 +76,25 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await api.post('/auth/google', { credential });
-      const { user: userData, accessToken } = response.data.data;
       
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      // Check if it's a brand new user
+      if (response.data.isNewUser) {
+        return { isNewUser: true, googleData: response.data.googleData };
+      }
+
+      // Otherwise, log them in normally
+      const { user, accessToken, refreshToken } = response.data.data;
       localStorage.setItem('accessToken', accessToken);
-      
-      toast.success(`Welcome, ${userData.name}!`);
-      return true;
+      localStorage.setItem('refreshToken', refreshToken);
+      setUser(user);
+      return { success: true };
     } catch (error) {
-      toast.error('Google Sign-In failed. Please try again.');
-      return false;
+      console.error("Google login failed", error);
+      return { success: false };
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
       <AuthContext.Provider value={{ user, login, registerUser, loginWithGoogle, logout, loading }}>
