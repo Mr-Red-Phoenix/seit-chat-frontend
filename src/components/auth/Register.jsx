@@ -29,6 +29,23 @@ const Register = () => {
       return setApiError('Please fill in all fields.');
     }
     setIsSendingOtp(true);
+    if (googleData) {
+      try {
+        // We bypass the OTP and call the final register function directly!
+        // We pass a dummy OTP "GOOGLE_AUTH" or change the backend to accept it without OTP
+        const success = await registerUser(name, username, email, password, "GOOGLE_BYPASS");
+        if (success) {
+          window.location.href = '/dashboard'; 
+          return; 
+        } else {
+          setIsSendingOtp(false);
+          return setApiError('Registration failed.');
+        }
+      } catch (error) {
+        setIsSendingOtp(false);
+        return setApiError('Registration failed.');
+      }
+    }
     try {
       await api.post('/auth/send-register-otp', { email, username });
       toast.success("OTP sent to your email!");
