@@ -28,14 +28,15 @@ const Register = () => {
     if (!name.trim() || !username.trim() || !email.trim() || !password.trim()) {
       return setApiError('Please fill in all fields.');
     }
+    
     setIsSendingOtp(true);
+
+    // ---> THE GOOGLE VIP BYPASS <---
     if (googleData) {
       try {
-        // We bypass the OTP and call the final register function directly!
-        // We pass a dummy OTP "GOOGLE_AUTH" or change the backend to accept it without OTP
         const success = await registerUser(name, username, email, password, "GOOGLE_BYPASS");
         if (success) {
-          window.location.href = '/dashboard'; 
+          navigate('/dashboard'); // <--- THE FIX: Use navigate so React doesn't refresh!
           return; 
         } else {
           setIsSendingOtp(false);
@@ -46,6 +47,9 @@ const Register = () => {
         return setApiError('Registration failed.');
       }
     }
+    // ---------------------------------
+
+    // If it's a normal user, continue with the standard OTP flow:
     try {
       await api.post('/auth/send-register-otp', { email, username });
       toast.success("OTP sent to your email!");
@@ -123,7 +127,8 @@ const Register = () => {
                 disabled={isSendingOtp} 
                 className="w-full py-2.5 px-4 bg-[#4CAF50] text-white font-medium rounded-lg hover:bg-[#43A047] transition-colors disabled:opacity-70"
               >
-                {isSendingOtp ? 'Sending Email...' : 'Next'}
+                {/* THE FIX: Dynamically change the loading text! */}
+                {isSendingOtp ? (googleData ? 'Creating Account...' : 'Sending Email...') : (googleData ? 'Create Account' : 'Next')}
               </button>
             </div>
           </form>
