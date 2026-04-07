@@ -25,8 +25,19 @@ const Register = () => {
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setApiError('');
+    // if (!name.trim() || !username.trim() || !email.trim() || !password.trim()) {
+    //   return setApiError('Please fill in all fields.');
+    // }
+    
+    // setIsSendingOtp(true);
     if (!name.trim() || !username.trim() || !email.trim() || !password.trim()) {
       return setApiError('Please fill in all fields.');
+    }
+
+    // ---> STRICT EMAIL FORMAT CHECK <---
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      return setApiError('Please enter a valid email address.');
     }
     
     setIsSendingOtp(true);

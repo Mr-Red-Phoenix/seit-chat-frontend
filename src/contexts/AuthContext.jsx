@@ -5,16 +5,25 @@ import api from '../api/axios.config.js';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // const [user, setUser] = useState(null);
+  // const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem('user');
+  //   const token = localStorage.getItem('accessToken');
+  //   if (storedUser && token) {
+  //     setUser(JSON.parse(storedUser));
+  //   }
+  // }, []);
+  // ---> NEW: Synchronous Initialization <---
+  // This grabs the user BEFORE the first render, stopping the premature redirect!
+  const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('accessToken');
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+    return (storedUser && token) ? JSON.parse(storedUser) : null;
+  });
+  
+  const [loading, setLoading] = useState(false);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -62,6 +71,7 @@ export const AuthProvider = ({ children }) => {
       const { user, accessToken, refreshToken } = response.data.data;
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       return true; 
     } catch (error) {
@@ -86,6 +96,7 @@ export const AuthProvider = ({ children }) => {
       const { user, accessToken, refreshToken } = response.data.data;
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       return { success: true };
     } catch (error) {
